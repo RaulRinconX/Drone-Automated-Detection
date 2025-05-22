@@ -1,6 +1,7 @@
 import argparse
 import time
 from pathlib import Path
+import subprocess
 
 import cv2
 import torch
@@ -66,6 +67,8 @@ def detect(save_img=False):
     old_img_b = 1
 
     t0 = time.time()
+    drone_sweep_done = False  # Para evitar múltiples ejecuciones seguidas
+
     for path, img, im0s, vid_cap in dataset:
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()
@@ -123,6 +126,38 @@ def detect(save_img=False):
 
                     if save_img or view_img:
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=1)
+
+                # --- INICIO: Lanzar hackrf_sweep y procesamiento si no se ha hecho ---
+                if not drone_sweep_done:
+                    print("¡Drone detectado visualmente! Ejecutando hackrf_sweep...")
+                    subprocess.run([
+                        "hackrf_sweep",
+                        "-f", "2350:2550",
+                        "-a", "1",
+                        "-p", "1",
+                        "-l", "40",
+                        "-g", "62",
+                        "-w", "20000",
+                        "-r", "deteccion.csv"
+                    ], check=True)
+
+                    print("Procesando deteccion.csv con tratamiento_datos_pandas.py...")
+                    subprocess.run([
+                        "python3", "../tratamiento_datos_pandas.py",
+                        "-i", "deteccion.csv",
+                        "-o", "deteccion_tratada.csv",
+                        "-f", "50"
+                    ], check=True)
+
+                    print("Ejecutando script3.py para verificación final...")
+                    subprocess.run([
+                        "python3", "../script3.py",
+                        "baseline.csv",
+                        "deteccion_tratada.csv"
+                    ], check=True)
+
+                    drone_sweep_done = True  # Solo una vez por ejecución
+                # --- FIN ---
 
             print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
 
