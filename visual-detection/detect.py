@@ -117,6 +117,7 @@ def detect(save_img=False):
                     now = datetime.now()
                     timestamp = now.strftime("%H:%M:%S.%f")[:-3] 
                     print(f'Detection: {label} at {timestamp}')  # <-- Print detection with score
+                                        
 
                     if save_txt:
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()
@@ -126,9 +127,9 @@ def detect(save_img=False):
 
                     if save_img or view_img:
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=1)
-
+              
                 # --- INICIO: Lanzar hackrf_sweep y procesamiento si no se ha hecho ---
-                if not time.time() - last_sweep > 300:  # 5 minutos
+                if time.time() - last_sweep > 300:  # 5 minutos
                     last_sweep = time.time()
                     print("Drone visually detected! Executing hackrf_sweep...")
                     subprocess.run([
@@ -139,8 +140,9 @@ def detect(save_img=False):
                         "-l", "40",
                         "-g", "62",
                         "-w", "20000",
-                        "-r", "deteccion.csv"
-                    ], check=True)
+			"-N", "4096",
+                        "-r", "deteccion.csv",
+                    ], check=True, shell=False)
 
                     print("Processing deteccion.csv with tratamiento_datos_pandas.py...")
                     subprocess.run([
@@ -148,7 +150,7 @@ def detect(save_img=False):
                         "-i", "deteccion.csv",
                         "-o", "deteccion_tratada.csv",
                         "-f", "50"
-                    ], check=True)
+                    ], check=True, shell=False)
 
                     print("Executing script3.py for final verification...")
                     subprocess.run([
@@ -185,7 +187,7 @@ def detect(save_img=False):
         s = f"\n{len(list(save_dir.glob('labels/*.txt')))} labels saved to {save_dir / 'labels'}" if save_txt else ''
         #print(f"Results saved to {save_dir}{s}")
 
-    print(f'Done. ({time.time() - t0:.3f}s)')
+    print(f'Done. ({now.strftime("%H:%M:%S.%f")[:-3]})')
 
 
 if __name__ == '__main__':
@@ -218,3 +220,4 @@ if __name__ == '__main__':
                 strip_optimizer(opt.weights)
         else:
             detect()
+
