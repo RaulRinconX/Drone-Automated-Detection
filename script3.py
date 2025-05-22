@@ -26,6 +26,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import Jetson.GPIO as GPIO
+import time
+
 
 def leer_csv(path: str) -> pd.DataFrame:
     """Carga un CSV, probando utf-8 y latin1."""
@@ -132,6 +135,14 @@ def main():
 
     print("\n===== RESULTADO =====")
     print("Drone detectado" if dron_detectado else "Sin drone")
+    
+    if dron_detectado:
+        print("Drone detected! Starting jammer...")
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(12, GPIO.OUT)
+        GPIO.output(12, GPIO.HIGH)
+        time.sleep(75)
+        GPIO.output(12, GPIO.LOW)
 
 
 if __name__ == "__main__":

@@ -67,7 +67,7 @@ def detect(save_img=False):
     old_img_b = 1
 
     t0 = time.time()
-    drone_sweep_done = False  # Para evitar múltiples ejecuciones seguidas
+    last_sweep = float('-inf')
 
     for path, img, im0s, vid_cap in dataset:
         img = torch.from_numpy(img).to(device)
@@ -128,8 +128,9 @@ def detect(save_img=False):
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=1)
 
                 # --- INICIO: Lanzar hackrf_sweep y procesamiento si no se ha hecho ---
-                if not drone_sweep_done:
-                    print("¡Drone detectado visualmente! Ejecutando hackrf_sweep...")
+                if not time.time() - last_sweep > 300:  # 5 minutos
+                    last_sweep = time.time()
+                    print("Drone visually detected! Executing hackrf_sweep...")
                     subprocess.run([
                         "hackrf_sweep",
                         "-f", "2350:2550",
@@ -141,7 +142,7 @@ def detect(save_img=False):
                         "-r", "deteccion.csv"
                     ], check=True)
 
-                    print("Procesando deteccion.csv con tratamiento_datos_pandas.py...")
+                    print("Processing deteccion.csv with tratamiento_datos_pandas.py...")
                     subprocess.run([
                         "python3", "../tratamiento_datos_pandas.py",
                         "-i", "deteccion.csv",
@@ -149,14 +150,14 @@ def detect(save_img=False):
                         "-f", "50"
                     ], check=True)
 
-                    print("Ejecutando script3.py para verificación final...")
+                    print("Executing script3.py for final verification...")
                     subprocess.run([
                         "python3", "../script3.py",
                         "baseline.csv",
                         "deteccion_tratada.csv"
                     ], check=True)
+                
 
-                    drone_sweep_done = True  # Solo una vez por ejecución
                 # --- FIN ---
 
             print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
