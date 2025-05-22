@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 import argparse
-from datetime import datetime
-
-import numpy as np
 import pandas as pd
+import numpy as np
+import math
 
 def process_with_pandas(input_csv: str, output_csv: str, flux_cal: float):
     # 1) Leer CSV raw sin encabezado
@@ -23,39 +21,38 @@ def process_with_pandas(input_csv: str, output_csv: str, flux_cal: float):
         format='%Y-%m-%d %H:%M:%S'
     ).dt.strftime('%Y-%m-%d %H:%M:%S')
 
-    # 4) Pasar de dB a mW/Hz:   P_mW/Hz = 10^(dBm/10)
+    # 4) Convertir dB a mW/Hz, luego a mW (multiplicar por ancho de bin)
     lin_mw_per_hz = 10 ** (df[db_cols] / 10)
+    lin_mw_per_bin = lin_mw_per_hz.mul(df['hz_bin_width'], axis=0)
+    power_sum_mw = lin_mw_per_bin.sum(axis=1)
 
-    # 5) Sumar a lo largo de todas las bandas (cada fila)
-    total_lin_mw_per_hz = lin_mw_per_hz.sum(axis=1)
-
-    # 6) Convertir a mW sobre todo el ancho de banda (bin_width en Hz)
-    total_mw = total_lin_mw_per_hz * df['hz_bin_width']
-
-    # 7) Calcular Power Flux Density [µW/m²]:
-    #    total_mw (mW) -> µW: *1000, luego aplicar factor de calibración
-    df['Power Flux Density [µW/m²]'] = total_mw * 1000 * flux_cal
-
-    # 8) Total Spectrum Power [dBm]: 10·log10(total_mw)
-    #    Evitamos log(0) reemplazándolo por NaN y luego llenamos con un valor muy bajo
-    df['Total Spectrum Power [dBm]'] = 10 * np.log10(total_mw.replace(0, np.nan))
-    df['Total Spectrum Power [dBm]'] = df['Total Spectrum Power [dBm]'].fillna(-150)
-
-    # 9) Max Amplitude [dBm] y Frequency [MHz]
+    # 5) Calcular Max Amplitude [dBm] y Frequency [MHz]
     df['Max Amplitude [dBm]'] = df[db_cols].max(axis=1)
     idx_max = df[db_cols].values.argmax(axis=1)
-    # Frecuencia central de cada bin: hz_low + (i+0.5)*hz_bin_width
     df['Frequency [MHz]'] = (
         df['hz_low'] + (idx_max + 0.5) * df['hz_bin_width']
     ) / 1e6
 
-    # 10) Formatear sin notación científica y con decimales fijos
+    # 6) Calcular Power Flux Density [µW/m²] según Java:
+    #    powerFluxSum = (powerSum * 10^(flux_cal/10)) * (4π * (f/1e3)^2 * 1e18) / c^2
+    calibration_lin = 10 ** (flux_cal / 10.0)
+    freq_mhz = df['Frequency [MHz]']
+    em_factor = (4 * math.pi * (freq_mhz / 1e3) ** 2 * 1e18) / (299792458 ** 2)
+    df['Power Flux Density [µW/m²]'] = power_sum_mw * calibration_lin * em_factor
+
+    # 7) Total Spectrum Power [dBm]: 10·log10(power_sum_mw)
+    df['Total Spectrum Power [dBm]'] = 10 * np.log10(
+        power_sum_mw.replace(0, np.nan)
+    )
+    df['Total Spectrum Power [dBm]'] = df['Total Spectrum Power [dBm]'].fillna(-150)
+
+    # 8) Formatear sin notación científica y con decimales fijos
     df['Total Spectrum Power [dBm]']    = df['Total Spectrum Power [dBm]'].map(lambda x: f"{x:.1f}")
     df['Power Flux Density [µW/m²]']    = df['Power Flux Density [µW/m²]'].map(lambda x: f"{x:.1f}")
     df['Max Amplitude [dBm]']           = df['Max Amplitude [dBm]'].map(lambda x: f"{x:.1f}")
     df['Frequency [MHz]']               = df['Frequency [MHz]'].map(lambda x: f"{x:.2f}")
 
-    # 11) Exportar sólo las columnas deseadas
+    # 9) Exportar solo las columnas deseadas
     out = df[[
         'Timestamp',
         'Total Spectrum Power [dBm]',
@@ -65,6 +62,7 @@ def process_with_pandas(input_csv: str, output_csv: str, flux_cal: float):
     ]]
     out.to_csv(output_csv, index=False)
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Convierte sweep raw CSV a formato simplificado usando pandas"
@@ -72,7 +70,7 @@ def main():
     parser.add_argument('-i', '--input',  required=True, help="CSV raw, sin encabezado")
     parser.add_argument('-o', '--output', required=True, help="CSV de salida")
     parser.add_argument('-f', '--flux-cal', type=float, default=50.0,
-                        help="Factor de calibración (default: 50)")
+                        help="Factor de calibración (dB, default: 50)")
     args = parser.parse_args()
 
     process_with_pandas(args.input, args.output, args.flux_cal)
