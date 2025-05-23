@@ -48,9 +48,11 @@ def process_with_pandas(input_csv: str, output_csv: str, flux_cal: float):
     df['Total Spectrum Power dBm'] = 10 * np.log10(
         power_sum_mw.replace(0, np.nan)
     )
+
     df['Total Spectrum Power dBm'] = df['Total Spectrum Power dBm'].fillna(-150)
 
-    # 8) Formatear sin notación científica y con decimales fijos
+
+    # 8) Formatear sin notacion cientifica y con decimales fijos
     df['Total Spectrum Power dBm']    = df['Total Spectrum Power dBm'].map(lambda x: f"{x:.1f}")
     df['Power Flux Density']    = df['Power Flux Density'].map(lambda x: f"{x:.1f}")
     df['Max Amplitude dBm']           = df['Max Amplitude dBm'].map(lambda x: f"{x:.1f}")

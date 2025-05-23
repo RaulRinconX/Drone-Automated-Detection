@@ -11,7 +11,7 @@ subprocess.run([
     "-w", "20000",
     "-N", "2000",
     "-r", "baseline.csv"
-], check=True, shell=False)
+], check=True, shell=False, timeout=None)
 
 print("Processing deteccion.csv with tratamiento_datos_pandas.py...")
 subprocess.run([
@@ -19,5 +19,5 @@ subprocess.run([
     "-i", "baseline.csv",
     "-o", "baseline_tratada.csv",
     "-f", "50"
-], check=True, shell=False)
 
+], check=True, shell=False)

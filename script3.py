@@ -37,7 +37,9 @@ def buscar_col(df: pd.DataFrame, key: str):
 
 def main():
     parser = argparse.ArgumentParser(
+
         description="Drone detection using thresholds in PFD and peak, bandpass filter, and hysteresis."
+        
     )
     parser.add_argument("baseline", help="Processed CSV (drone off).")
     parser.add_argument("datafile", help="Processed CSV to analyze.")
