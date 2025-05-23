@@ -155,7 +155,7 @@ def detect(save_img=False):
                     print("Executing script3.py for final verification...")
                     subprocess.run([
                         "python3", "../script3.py",
-                        "baseline.csv",
+                        "baseline_tratada.csv",
                         "deteccion_tratada.csv"
                     ], check=True)
                 
