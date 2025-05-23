@@ -2,6 +2,7 @@ import argparse
 import time
 from pathlib import Path
 import subprocess
+import sys
 
 import cv2
 import torch
@@ -15,6 +16,11 @@ from utils.general import check_img_size, check_requirements, check_imshow, non_
 from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
 from datetime import datetime
+
+sys.path.append(str(Path(__file__).parent / "scripts"))  # Asegura que el directorio scripts esté en el path
+
+from tratamiento_datos_pandas import main as tratamiento_main
+from script3 import main as script3_main
 
 def detect(save_img=False):
     source, weights, view_img, save_txt, imgsz, trace = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, not opt.no_trace
@@ -140,24 +146,22 @@ def detect(save_img=False):
                         "-l", "40",
                         "-g", "62",
                         "-w", "20000",
-			            "-N", "2000",
+                        "-N", "2000",
                         "-r", "deteccion.csv",
-                    ], check=True, shell=False)
+                    ], check=True, shell=False, timeout=None)
 
                     print("Processing deteccion.csv with tratamiento_datos_pandas.py...")
-                    subprocess.run([
-                        "python3", "../tratamiento_datos_pandas.py",
+                    tratamiento_main([
                         "-i", "deteccion.csv",
                         "-o", "deteccion_tratada.csv",
                         "-f", "50"
-                    ], check=True, shell=False)
+                    ])
 
                     print("Executing script3.py for final verification...")
-                    subprocess.run([
-                        "python3", "../script3.py",
+                    script3_main([
                         "baseline_tratada.csv",
                         "deteccion_tratada.csv"
-                    ], check=True)
+                    ])
                 
 
                 # --- FIN ---
