@@ -30,39 +30,39 @@ def process_with_pandas(input_csv: str, output_csv: str, flux_cal: float):
     lin_mw_per_bin = lin_mw_per_hz.mul(df['hz_bin_width'], axis=0)
     power_sum_mw = lin_mw_per_bin.sum(axis=1)
 
-    # 5) Calcular Max Amplitude [dBm] y Frequency [MHz]
-    df['Max Amplitude [dBm]'] = df[db_cols].max(axis=1)
+    # 5) Calcular Max Amplitude dBm y Frequency MHz
+    df['Max Amplitude dBm'] = df[db_cols].max(axis=1)
     idx_max = df[db_cols].values.argmax(axis=1)
-    df['Frequency [MHz]'] = (
+    df['Frequency MHz'] = (
         df['hz_low'] + (idx_max + 0.5) * df['hz_bin_width']
     ) / 1e6
 
-    # 6) Calcular Power Flux Density [µW/m²] según Java:
+    # 6) Calcular Power Flux Density según Java:
     #    powerFluxSum = (powerSum * 10^(flux_cal/10)) * (4π * (f/1e3)^2 * 1e18) / c^2
     calibration_lin = 10 ** (flux_cal / 10.0)
-    freq_mhz = df['Frequency [MHz]']
+    freq_mhz = df['Frequency MHz']
     em_factor = (4 * math.pi * (freq_mhz / 1e3) ** 2 * 1e18) / (299792458 ** 2)
-    df['Power Flux Density [µW/m²]'] = power_sum_mw * calibration_lin * em_factor
+    df['Power Flux Density'] = power_sum_mw * calibration_lin * em_factor
 
-    # 7) Total Spectrum Power [dBm]: 10·log10(power_sum_mw)
-    df['Total Spectrum Power [dBm]'] = 10 * np.log10(
+    # 7) Total Spectrum Power dBm: 10·log10(power_sum_mw)
+    df['Total Spectrum Power dBm'] = 10 * np.log10(
         power_sum_mw.replace(0, np.nan)
     )
-    df['Total Spectrum Power [dBm]'] = df['Total Spectrum Power [dBm]'].fillna(-150)
+    df['Total Spectrum Power dBm'] = df['Total Spectrum Power dBm'].fillna(-150)
 
     # 8) Formatear sin notación científica y con decimales fijos
-    df['Total Spectrum Power [dBm]']    = df['Total Spectrum Power [dBm]'].map(lambda x: f"{x:.1f}")
-    df['Power Flux Density [µW/m²]']    = df['Power Flux Density [µW/m²]'].map(lambda x: f"{x:.1f}")
-    df['Max Amplitude [dBm]']           = df['Max Amplitude [dBm]'].map(lambda x: f"{x:.1f}")
-    df['Frequency [MHz]']               = df['Frequency [MHz]'].map(lambda x: f"{x:.2f}")
+    df['Total Spectrum Power dBm']    = df['Total Spectrum Power dBm'].map(lambda x: f"{x:.1f}")
+    df['Power Flux Density']    = df['Power Flux Density'].map(lambda x: f"{x:.1f}")
+    df['Max Amplitude dBm']           = df['Max Amplitude dBm'].map(lambda x: f"{x:.1f}")
+    df['Frequency MHz']               = df['Frequency MHz'].map(lambda x: f"{x:.2f}")
 
     # 9) Exportar solo las columnas deseadas
     out = df[[
         'Timestamp',
-        'Total Spectrum Power [dBm]',
-        'Power Flux Density [µW/m²]',
-        'Max Amplitude [dBm]',
-        'Frequency [MHz]'
+        'Total Spectrum Power dBm',
+        'Power Flux Density',
+        'Max Amplitude dBm',
+        'Frequency MHz'
     ]]
     out.to_csv(output_csv, index=False)
 
