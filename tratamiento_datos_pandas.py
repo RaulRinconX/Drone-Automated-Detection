@@ -7,7 +7,7 @@ import math
 
 def process_with_pandas(input_csv: str, output_csv: str, flux_cal: float):
     # 1) Leer CSV raw sin encabezado
-    df = pd.read_csv(input_csv, header=None)
+    df = pd.read_csv(input_csv, header=None, skiprows=1, skip_blank_lines=True)
 
     # 2) Asignar nombres: las primeras 6 fijas y el resto "db1", "db2", ...
     col_count = df.shape[1]
