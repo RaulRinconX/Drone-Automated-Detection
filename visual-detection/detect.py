@@ -144,7 +144,7 @@ def detect(save_img=False):
                         "-l", "40",
                         "-g", "62",
                         "-w", "20000",
-                        "-N", "2000",
+                        "-N", "1000",
                         "-r", "deteccion.csv",
                     ], check=True, shell=False, timeout=None)
 
