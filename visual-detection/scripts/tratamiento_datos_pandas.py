@@ -69,7 +69,7 @@ def process_with_pandas(input_csv: str, output_csv: str, flux_cal: float):
     out.to_csv(output_csv, index=False)
 
 
-def main():
+def main(args=None):
     parser = argparse.ArgumentParser(
         description="Convierte sweep raw CSV a formato simplificado usando pandas"
     )
@@ -77,7 +77,10 @@ def main():
     parser.add_argument('-o', '--output', required=True, help="CSV de salida")
     parser.add_argument('-f', '--flux-cal', type=float, default=50.0,
                         help="Factor de calibración (dB, default: 50)")
-    args = parser.parse_args()
+    if args is None:
+        args = parser.parse_args()
+    else:
+        args = parser.parse_args(args)
 
     process_with_pandas(args.input, args.output, args.flux_cal)
 
