@@ -15,7 +15,7 @@ subprocess.run([
 
 print("Processing deteccion.csv with tratamiento_datos_pandas.py...")
 subprocess.run([
-    "python3", "visual-detection/scripts/tratamiento_datos_pandas.py",
+    "python3", "scripts/tratamiento_datos_pandas.py",
     "-i", "prueba.csv",
     "-o", "prueba_tratada.csv",
     "-f", "50"
