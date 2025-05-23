@@ -6,14 +6,18 @@ import numpy as np
 import math
 
 def process_with_pandas(input_csv: str, output_csv: str, flux_cal: float):
-    # 1) Leer CSV raw sin encabezado, saltando la primera línea
-    df = pd.read_csv(input_csv, header=None, skiprows=1, skip_blank_lines=True)
+    # 1) Leer CSV raw sin encabezado, saltando la primera línea si es necesario
+    df = pd.read_csv(input_csv, header=None, skip_blank_lines=True)
 
     # 2) Asignar nombres: las primeras 6 fijas y el resto "db1", "db2", ...
     col_count = df.shape[1]
     base_cols = ['date', 'time', 'hz_low', 'hz_high', 'hz_bin_width', 'num_samples']
     db_cols = [f'db{i+1}' for i in range(col_count - len(base_cols))]
     df.columns = base_cols + db_cols
+
+    # Convierte las columnas numéricas a float
+    for col in ['hz_low', 'hz_high', 'hz_bin_width', 'num_samples'] + db_cols:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
 
     # 3) Timestamp combinado (sin decimales de segundo)
     #    Limpiamos espacios extra en date y time antes de concatenar
