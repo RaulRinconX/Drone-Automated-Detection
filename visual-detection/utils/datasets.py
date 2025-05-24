@@ -206,7 +206,7 @@ class LoadImages:  # for inference
 
 
 class LoadWebcam:  # for inference
-    def __init__(self, pipe='0', img_size=640, stride=32):
+    def __init__(self, pipe='0', img_size=1920, stride=32):
         self.img_size = img_size
         self.stride = stride
 
