@@ -133,7 +133,7 @@ def detect(save_img=False):
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=1)
               
                 # --- INICIO: Lanzar hackrf_sweep y procesamiento si no se ha hecho ---
-                if time.time() - last_sweep > 300:  # 5 minutos
+                if time.time() - last_sweep > 30:  # 5 minutos
                     last_sweep = time.time()
                     print("Drone visually detected! Executing hackrf_sweep...")
                     subprocess.run([
