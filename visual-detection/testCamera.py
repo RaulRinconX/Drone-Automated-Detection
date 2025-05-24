@@ -19,13 +19,6 @@ actual_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 actual_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 print(f"Camera resolution: {int(actual_width)}x{int(actual_height)}")
 
-# Display the video feed
-while ret:
-    cv2.imshow("Camera Feed", frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-    ret, frame = cap.read()
-
 # Release resources
 cap.release()
 cv2.destroyAllWindows()
