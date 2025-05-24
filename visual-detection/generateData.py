@@ -10,14 +10,14 @@ subprocess.run([
     "-g", "62",
     "-w", "20000",
     "-N", "1000",
-    "-r", "baseline.csv"
+    "-r", "prueba.csv"
 ], check=True, shell=False, timeout=None)
 
 print("Processing deteccion.csv with tratamiento_datos_pandas.py...")
 subprocess.run([
     "python3", "scripts/tratamiento_datos_pandas.py",
-    "-i", "baseline.csv",
-    "-o", "baseline_tratada.csv",
+    "-i", "prueba.csv",
+    "-o", "prueba_tratada.csv",
     "-f", "50"
 
 ], check=True, shell=False)

@@ -2,6 +2,10 @@ import argparse
 import time
 from pathlib import Path
 import subprocess
+import sys
+
+from scripts.tratamiento_datos_pandas import main as tratamiento_main
+from scripts.script3 import main as script3_main
 
 import cv2
 import torch
@@ -129,7 +133,7 @@ def detect(save_img=False):
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=1)
               
                 # --- INICIO: Lanzar hackrf_sweep y procesamiento si no se ha hecho ---
-                if time.time() - last_sweep > 300:  # 5 minutos
+                if time.time() - last_sweep > 30:  # 5 minutos
                     last_sweep = time.time()
                     print("Drone visually detected! Executing hackrf_sweep...")
                     subprocess.run([
@@ -140,24 +144,25 @@ def detect(save_img=False):
                         "-l", "40",
                         "-g", "62",
                         "-w", "20000",
-			            "-N", "2500",
+                        "-N", "1000",
                         "-r", "deteccion.csv",
-                    ], check=True, shell=False)
+                    ], check=True, shell=False, timeout=None)
 
                     print("Processing deteccion.csv with tratamiento_datos_pandas.py...")
-                    subprocess.run([
-                        "python3", "../tratamiento_datos_pandas.py",
+                    tratamiento_main([
                         "-i", "deteccion.csv",
                         "-o", "deteccion_tratada.csv",
                         "-f", "50"
-                    ], check=True, shell=False)
+                    ])
 
                     print("Executing script3.py for final verification...")
-                    subprocess.run([
-                        "python3", "../script3.py",
-                        "baseline.csv",
-                        "deteccion_tratada.csv"
-                    ], check=True)
+                    script3_main([
+                        "baseline_tratada.csv",
+                        "deteccion_tratada.csv",
+                        "--freq-min", "2350",
+                        "--freq-max", "2550",
+                        "--n-consec", "2",
+                    ])
                 
 
                 # --- FIN ---
