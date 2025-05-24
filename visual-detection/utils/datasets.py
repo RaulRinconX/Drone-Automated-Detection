@@ -126,7 +126,7 @@ class _RepeatSampler(object):
 
 
 class LoadImages:  # for inference
-    def __init__(self, path, img_size=640, stride=32):
+    def __init__(self, path, img_size=1920, stride=32):
         p = str(Path(path).absolute())  # os-agnostic absolute path
         if '*' in p:
             files = sorted(glob.glob(p, recursive=True))  # glob
@@ -218,7 +218,10 @@ class LoadWebcam:  # for inference
 
         self.pipe = pipe
         self.cap = cv2.VideoCapture(pipe)  # video capture object
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)   # ancho deseado
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)   # alto deseado
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)  # set buffer size
+
 
     def __iter__(self):
         self.count = -1
@@ -264,7 +267,7 @@ class LoadWebcam:  # for inference
 
 
 class LoadStreams:  # multiple IP or RTSP cameras
-    def __init__(self, sources='streams.txt', img_size=640, stride=32):
+    def __init__(self, sources='streams.txt', img_size=1920, stride=32):
         self.mode = 'stream'
         self.img_size = img_size
         self.stride = stride
@@ -351,7 +354,7 @@ def img2label_paths(img_paths):
 
 
 class LoadImagesAndLabels(Dataset):  # for training/testing
-    def __init__(self, path, img_size=640, batch_size=16, augment=False, hyp=None, rect=False, image_weights=False,
+    def __init__(self, path, img_size=1920, batch_size=16, augment=False, hyp=None, rect=False, image_weights=False,
                  cache_images=False, single_cls=False, stride=32, pad=0.0, prefix=''):
         self.img_size = img_size
         self.augment = augment
